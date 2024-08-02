@@ -119,6 +119,10 @@ pub trait PlotItem {
             label_formatter,
         );
     }
+
+    fn hover_event(&mut self, hovered_ev: Option<Box<dyn Fn(&Bar, usize)>>) {
+
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -1565,6 +1569,9 @@ pub struct BarChart {
     highlight: bool,
     allow_hover: bool,
     id: Option<Id>,
+
+    /// On Hovered call back
+    pub(super) hovered: Option<Box<dyn Fn(&Bar, usize)>>,
 }
 
 impl BarChart {
@@ -1578,6 +1585,7 @@ impl BarChart {
             highlight: false,
             allow_hover: true,
             id: None,
+            hovered:None
         }
     }
 
@@ -1740,6 +1748,10 @@ impl PlotItem for BarChart {
         find_closest_rect(&self.bars, point, transform)
     }
 
+    fn hover_event(&mut self, hovered_ev: Option<Box<dyn Fn(&Bar, usize)>>) {
+        self.hovered = hovered_ev;
+    }
+
     fn on_hover(
         &self,
         elem: ClosestElem,
@@ -1752,6 +1764,10 @@ impl PlotItem for BarChart {
 
         bar.add_shapes(plot.transform, true, shapes);
         bar.add_rulers_and_text(self, plot, shapes, cursors);
+        
+        if let Some(hovered) = &self.hovered {
+            hovered(&bar, elem.index);
+        }
     }
 
     fn id(&self) -> Option<Id> {
